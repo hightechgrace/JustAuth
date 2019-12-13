@@ -15,6 +15,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 
 /**
  * 抖音登录
@@ -103,12 +105,18 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.9.3
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_key", config.getClientId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("scope", "user_info")
             .queryParam("state", getRealState(state))
             .build();

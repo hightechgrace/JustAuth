@@ -6,6 +6,8 @@ import me.zhyd.oauth.model.AuthCallback;
 import me.zhyd.oauth.model.AuthResponse;
 import me.zhyd.oauth.model.AuthToken;
 
+import java.util.function.Function;
+
 /**
  * JustAuth {@code Request}公共接口，所有平台的{@code Request}都需要实现该接口
  * <p>
@@ -43,6 +45,9 @@ public interface AuthRequest {
         throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
     }
 
+    default String authorize(String state, Function<String,String> redirectUriProcess){
+        throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
+    }
     /**
      * 第三方登录
      *

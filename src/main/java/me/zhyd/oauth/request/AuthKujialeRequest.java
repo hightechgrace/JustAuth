@@ -15,6 +15,8 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.StringUtils;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * 酷家乐授权登录
  *
@@ -41,7 +43,13 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
      */
     @Override
     public String authorize(String state) {
-        return authorize(state, "get_user_info");
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
+
+        return authorize(state, "get_user_info", redirectUriProcess);
     }
 
     /**
@@ -52,11 +60,11 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
      *                 参考https://open.kujiale.com/open/apps/2/docs?doc_id=95#Step1%EF%BC%9A%E8%8E%B7%E5%8F%96Authorization%20Code参数表内的scope字段
      * @return authorize url
      */
-    public String authorize(String state, String scopeStr) {
+    public String authorize(String state, String scopeStr, Function<String, String> redirectUriProcess) {
         UrlBuilder urlBuilder = UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_id", config.getClientId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("state", getRealState(state));
         if (StringUtils.isNotEmpty(scopeStr)) {
             urlBuilder.queryParam("scope", scopeStr);

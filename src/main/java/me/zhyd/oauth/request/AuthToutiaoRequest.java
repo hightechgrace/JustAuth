@@ -13,6 +13,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * 今日头条登录
  *
@@ -75,12 +77,18 @@ public class AuthToutiaoRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.9.3
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_key", config.getClientId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("auth_only", 1)
             .queryParam("display", 0)
             .queryParam("state", getRealState(state))

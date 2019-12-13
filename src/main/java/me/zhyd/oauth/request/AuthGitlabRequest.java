@@ -12,6 +12,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * Gitlab登录
  *
@@ -85,8 +87,14 @@ public class AuthGitlabRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.11.0
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(super.authorize(state))
             .queryParam("scope", "read_user+openid+profile+email")
             .build();

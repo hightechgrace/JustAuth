@@ -20,6 +20,7 @@ import me.zhyd.oauth.utils.UuidUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 饿了么
@@ -144,8 +145,14 @@ public class AuthElemeRequest extends AuthDefaultRequest {
             .build();
     }
 
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(super.authorize(state))
             .queryParam("scope", "all")
             .build();

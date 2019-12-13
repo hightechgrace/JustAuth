@@ -18,6 +18,8 @@ import me.zhyd.oauth.utils.StringUtils;
 import me.zhyd.oauth.utils.UrlBuilder;
 import me.zhyd.oauth.utils.UuidUtils;
 
+import java.util.function.Function;
+
 /**
  * 默认的request处理类
  *
@@ -124,10 +126,16 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      */
     @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_id", config.getClientId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("state", getRealState(state))
             .build();
     }

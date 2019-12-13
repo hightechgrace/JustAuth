@@ -18,6 +18,8 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.StringUtils;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 
 /**
  * 领英登录
@@ -195,12 +197,18 @@ public class AuthLinkedinRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.9.3
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_id", config.getClientId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("scope", "r_liteprofile%20r_emailaddress%20w_member_social")
             .queryParam("state", getRealState(state))
             .build();

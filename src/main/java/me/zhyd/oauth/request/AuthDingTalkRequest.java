@@ -15,6 +15,8 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.GlobalAuthUtil;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * 钉钉登录
  *
@@ -68,13 +70,19 @@ public class AuthDingTalkRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.9.3
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("appid", config.getClientId())
             .queryParam("scope", "snsapi_login")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("state", getRealState(state))
             .build();
     }

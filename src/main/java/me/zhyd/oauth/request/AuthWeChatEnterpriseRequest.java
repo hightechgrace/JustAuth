@@ -14,6 +14,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * <p>
  * 企业微信登录
@@ -115,12 +117,18 @@ public class AuthWeChatEnterpriseRequest extends AuthDefaultRequest {
      * @return 返回授权地址
      * @since 1.9.3
      */
-    @Override
+      @Override
     public String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    @Override
+    public String authorize(String state, Function<String,String> redirectUriProcess) {
+
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("appid", config.getClientId())
             .queryParam("agentid", config.getAgentId())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("state", getRealState(state))
             .build();
     }
