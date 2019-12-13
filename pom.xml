@@ -6,7 +6,7 @@
 
   <groupId>me.zhyd.oauth</groupId>
   <artifactId>JustAuth</artifactId>
-  <version>1.13.1</version>
+  <version>1.13.1-CL</version>
 
   <name>JustAuth</name>
   <url>https://gitee.com/yadong.zhang/JustAuth</url>
@@ -223,12 +223,12 @@
       </build>
       <distributionManagement>
         <snapshotRepository>
-          <id>sonatype-nexus-snapshots</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+          <id>kf-snapshots</id>
+          <url>http://nexus.kefen.site:7300/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
-          <id>sonatype-nexus-staging</id>
-          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+          <id>kf-releases</id>
+          <url>http://nexus.kefen.site:7300/repository/maven-releases/</url>
         </repository>
       </distributionManagement>
     </profile>
