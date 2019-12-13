@@ -10,6 +10,8 @@ import me.zhyd.oauth.model.AuthResponse;
 import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 
+import java.util.function.Function;
+
 /**
  * 测试用自定义扩展的第三方request
  *
@@ -36,7 +38,7 @@ public class AuthExtendRequest extends AuthDefaultRequest {
      * @see AuthDefaultRequest#authorize(String)
      */
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         return AuthToken.builder()
             .openId("openId")
             .expireIn(1000)
@@ -53,10 +55,10 @@ public class AuthExtendRequest extends AuthDefaultRequest {
      *
      * @param authToken token信息
      * @return 用户信息
-     * @see AuthDefaultRequest#getAccessToken(AuthCallback)
+     * @see AuthDefaultRequest#getAccessToken(AuthCallback, Function<String, String>)
      */
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         return AuthUser.builder()
             .username("test")
             .nickname("test")
@@ -87,7 +89,7 @@ public class AuthExtendRequest extends AuthDefaultRequest {
      * @return AuthResponse
      */
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         return AuthResponse.builder()
             .code(AuthResponseStatus.SUCCESS.getCode())
             .data(AuthToken.builder()

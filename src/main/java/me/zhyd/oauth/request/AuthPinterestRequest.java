@@ -36,8 +36,8 @@ public class AuthPinterestRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         this.checkResponse(accessTokenObject);
         return AuthToken.builder()
@@ -47,7 +47,7 @@ public class AuthPinterestRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String userinfoUrl = userInfoUrl(authToken);
         HttpResponse response = HttpRequest.get(userinfoUrl).setFollowRedirects(true).execute();
         JSONObject object = JSONObject.parseObject(response.body());
@@ -74,20 +74,10 @@ public class AuthPinterestRequest extends AuthDefaultRequest {
         return jsonObject.getJSONObject("60x60").getString("url");
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")

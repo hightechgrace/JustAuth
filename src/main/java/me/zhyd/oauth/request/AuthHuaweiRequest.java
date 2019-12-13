@@ -44,13 +44,13 @@ public class AuthHuaweiRequest extends AuthDefaultRequest {
      * @see AuthDefaultRequest#authorize(String)
      */
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         HttpRequest request = HttpRequest.post(source.accessToken())
             .form("grant_type", "authorization_code")
             .form("code", authCallback.getAuthorization_code())
             .form("client_id", config.getClientId())
             .form("client_secret", config.getClientSecret())
-            .form("redirect_uri", config.getRedirectUri());
+            .form("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()));
         return getAuthToken(request);
     }
 
@@ -59,10 +59,10 @@ public class AuthHuaweiRequest extends AuthDefaultRequest {
      *
      * @param authToken token信息
      * @return 用户信息
-     * @see AuthDefaultRequest#getAccessToken(AuthCallback)
+     * @see AuthDefaultRequest#getAccessToken(AuthCallback, Function<String, String>)
      */
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = HttpRequest.post(source.userInfo())
             .form("nsp_ts", System.currentTimeMillis())
             .form("access_token", authToken.getAccessToken())
@@ -93,7 +93,7 @@ public class AuthHuaweiRequest extends AuthDefaultRequest {
      * @return AuthResponse
      */
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpRequest request = HttpRequest.post(source.refresh())
             .form("client_id", config.getClientId())
             .form("client_secret", config.getClientSecret())
@@ -118,20 +118,9 @@ public class AuthHuaweiRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
@@ -150,13 +139,13 @@ public class AuthHuaweiRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("grant_type", "authorization_code")
             .queryParam("code", code)
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .build();
     }
 

@@ -31,8 +31,8 @@ public class AuthCodingRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doGetAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doGetAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         this.checkResponse(accessTokenObject);
         return AuthToken.builder()
@@ -43,7 +43,7 @@ public class AuthCodingRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject object = JSONObject.parseObject(response.body());
         this.checkResponse(object);
@@ -76,20 +76,10 @@ public class AuthCodingRequest extends AuthDefaultRequest {
         }
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_id", config.getClientId())

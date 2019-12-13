@@ -35,12 +35,12 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        return this.getToken(accessTokenUrl(authCallback.getCode()));
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        return this.getToken(accessTokenUrl(authCallback.getCode(), redirectUriProcess));
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken,Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject userInfoObject = JSONObject.parseObject(response.body());
         this.checkResponse(userInfoObject);
@@ -57,10 +57,10 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         return AuthResponse.builder()
             .code(AuthResponseStatus.SUCCESS.getCode())
-            .data(getToken(refreshTokenUrl(oldToken.getRefreshToken())))
+            .data(getToken(refreshTokenUrl(oldToken.getRefreshToken(), redirectUriProcess)))
             .build();
     }
 
@@ -98,20 +98,10 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
@@ -129,7 +119,7 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("code", code)
             .queryParam("client_key", config.getClientId())
@@ -159,7 +149,7 @@ public class AuthDouyinRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String refreshTokenUrl(String refreshToken) {
+    protected String refreshTokenUrl(String refreshToken, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.refresh())
             .queryParam("client_key", config.getClientId())
             .queryParam("refresh_token", refreshToken)

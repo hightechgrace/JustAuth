@@ -19,6 +19,7 @@ import me.zhyd.oauth.utils.StringUtils;
 import me.zhyd.oauth.utils.UrlBuilder;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * qq登录
@@ -37,19 +38,19 @@ public class AuthQqRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doGetAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doGetAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         return getAuthToken(response);
     }
 
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
-        HttpResponse response = HttpRequest.get(refreshTokenUrl(authToken.getRefreshToken())).execute();
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
+        HttpResponse response = HttpRequest.get(refreshTokenUrl(authToken.getRefreshToken(), redirectUriProcess)).execute();
         return AuthResponse.builder().code(AuthResponseStatus.SUCCESS.getCode()).data(getAuthToken(response)).build();
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String openId = this.getOpenId(authToken);
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject object = JSONObject.parseObject(response.body());

@@ -41,11 +41,11 @@ public class AuthElemeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
 
         HttpRequest request = HttpRequest.post(source.accessToken())
             .form("client_id", config.getClientId())
-            .form("redirect_uri", config.getRedirectUri())
+            .form("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .form("code", authCallback.getCode())
             .form("grant_type", "authorization_code");
 
@@ -66,7 +66,7 @@ public class AuthElemeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         Map<String, Object> parameters = new HashMap<>();
         // 获取商户账号信息的API接口名称
         String action = "eleme.user.getUser";
@@ -121,7 +121,7 @@ public class AuthElemeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         HttpRequest request = HttpRequest.post(source.refresh())
             .form("refresh_token", oldToken.getRefreshToken())
             .form("grant_type", "refresh_token");
@@ -145,13 +145,9 @@ public class AuthElemeRequest extends AuthDefaultRequest {
             .build();
     }
 
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(super.authorize(state))
             .queryParam("scope", "all")

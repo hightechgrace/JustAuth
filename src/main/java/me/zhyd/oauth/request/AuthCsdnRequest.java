@@ -11,6 +11,8 @@ import me.zhyd.oauth.model.AuthCallback;
 import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 
+import java.util.function.Function;
+
 /**
  * CSDN登录
  *
@@ -29,15 +31,15 @@ public class AuthCsdnRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         this.checkResponse(accessTokenObject);
         return AuthToken.builder().accessToken(accessTokenObject.getString("access_token")).build();
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken,Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject object = JSONObject.parseObject(response.body());
         this.checkResponse(object);

@@ -13,6 +13,7 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.GlobalAuthUtil;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Github登录
@@ -31,8 +32,8 @@ public class AuthGithubRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         Map<String, String> res = GlobalAuthUtil.parseStringToMap(response.body());
 
         this.checkResponse(res.containsKey("error"), res.get("error_description"));
@@ -45,7 +46,7 @@ public class AuthGithubRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject object = JSONObject.parseObject(response.body());
 

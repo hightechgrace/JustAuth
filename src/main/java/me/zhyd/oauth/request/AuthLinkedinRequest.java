@@ -38,12 +38,12 @@ public class AuthLinkedinRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        return this.getToken(accessTokenUrl(authCallback.getCode()));
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        return this.getToken(accessTokenUrl(authCallback.getCode(), redirectUriProcess));
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String accessToken = authToken.getAccessToken();
         HttpResponse response = HttpRequest.get(userInfoUrl(authToken))
             .header("Host", "api.linkedin.com")
@@ -144,12 +144,12 @@ public class AuthLinkedinRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         String refreshToken = oldToken.getRefreshToken();
         if (StringUtils.isEmpty(refreshToken)) {
             throw new AuthException(AuthResponseStatus.UNSUPPORTED);
         }
-        String refreshTokenUrl = refreshTokenUrl(refreshToken);
+        String refreshTokenUrl = refreshTokenUrl(refreshToken, redirectUriProcess);
         return AuthResponse.builder()
             .code(AuthResponseStatus.SUCCESS.getCode())
             .data(this.getToken(refreshTokenUrl))
@@ -190,20 +190,10 @@ public class AuthLinkedinRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")

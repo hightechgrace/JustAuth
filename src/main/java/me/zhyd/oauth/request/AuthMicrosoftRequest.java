@@ -35,8 +35,8 @@ public class AuthMicrosoftRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        return getToken(accessTokenUrl(authCallback.getCode()));
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        return getToken(accessTokenUrl(authCallback.getCode(), redirectUriProcess));
     }
 
     /**
@@ -77,7 +77,7 @@ public class AuthMicrosoftRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String token = authToken.getAccessToken();
         String tokenType = authToken.getTokenType();
         String jwt = tokenType + " " + token;
@@ -104,27 +104,17 @@ public class AuthMicrosoftRequest extends AuthDefaultRequest {
      * @return AuthResponse
      */
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         return AuthResponse.builder()
             .code(AuthResponseStatus.SUCCESS.getCode())
-            .data(getToken(refreshTokenUrl(authToken.getRefreshToken())))
+            .data(getToken(refreshTokenUrl(authToken.getRefreshToken(), redirectUriProcess)))
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
@@ -143,14 +133,14 @@ public class AuthMicrosoftRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("code", code)
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
             .queryParam("grant_type", "authorization_code")
             .queryParam("scope", "user.read%20mail.read")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .build();
     }
 
@@ -172,14 +162,14 @@ public class AuthMicrosoftRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String refreshTokenUrl(String refreshToken) {
+    protected String refreshTokenUrl(String refreshToken, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.refresh())
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
             .queryParam("refresh_token", refreshToken)
             .queryParam("grant_type", "refresh_token")
             .queryParam("scope", "user.read%20mail.read")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .build();
     }
 }

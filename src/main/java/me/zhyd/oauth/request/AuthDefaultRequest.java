@@ -55,16 +55,16 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @see AuthDefaultRequest#authorize()
      * @see AuthDefaultRequest#authorize(String)
      */
-    protected abstract AuthToken getAccessToken(AuthCallback authCallback);
+    protected abstract AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess);
 
     /**
      * 使用token换取用户信息
      *
      * @param authToken token信息
      * @return 用户信息
-     * @see AuthDefaultRequest#getAccessToken(AuthCallback)
+     * @see AuthDefaultRequest#getAccessToken(AuthCallback, Function<String, String>)
      */
-    protected abstract AuthUser getUserInfo(AuthToken authToken);
+    protected abstract AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess);
 
     /**
      * 统一的登录入口。当通过{@link AuthDefaultRequest#authorize(String)}授权成功后，会跳转到调用方的相关回调方法中
@@ -73,14 +73,15 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @param authCallback 用于接收回调参数的实体
      * @return AuthResponse
      */
+
     @Override
-    public AuthResponse login(AuthCallback authCallback) {
+    public AuthResponse login(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         try {
             AuthChecker.checkCode(source, authCallback);
             this.checkState(authCallback.getState());
 
-            AuthToken authToken = this.getAccessToken(authCallback);
-            AuthUser user = this.getUserInfo(authToken);
+            AuthToken authToken = this.getAccessToken(authCallback, redirectUriProcess);
+            AuthUser user = this.getUserInfo(authToken, redirectUriProcess);
             return AuthResponse.builder().code(AuthResponseStatus.SUCCESS.getCode()).data(user).build();
         } catch (Exception e) {
             Log.error("Failed to login with oauth authorization.", e);
@@ -102,32 +103,7 @@ public abstract class AuthDefaultRequest implements AuthRequest {
         return AuthResponse.builder().code(errorCode).msg(e.getMessage()).build();
     }
 
-    /**
-     * 返回授权url，可自行跳转页面
-     * <p>
-     * 不建议使用该方式获取授权地址，不带{@code state}的授权地址，容易受到csrf攻击。
-     * 建议使用{@link AuthDefaultRequest#authorize(String)}方法生成授权地址，在回调方法中对{@code state}进行校验
-     *
-     * @return 返回授权地址
-     * @see AuthDefaultRequest#authorize(String)
-     */
-    @Deprecated
-    @Override
-    public String authorize() {
-        return this.authorize(null);
-    }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-    @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
 
     @Override
     public String authorize(String state, Function<String, String> redirectUriProcess) {
@@ -146,13 +122,13 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @param code 授权码
      * @return 返回获取accessToken的url
      */
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("code", code)
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
             .queryParam("grant_type", "authorization_code")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .build();
     }
 
@@ -162,13 +138,13 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @param refreshToken refreshToken
      * @return 返回获取accessToken的url
      */
-    protected String refreshTokenUrl(String refreshToken) {
+    protected String refreshTokenUrl(String refreshToken, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.refresh())
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
             .queryParam("refresh_token", refreshToken)
             .queryParam("grant_type", "refresh_token")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .build();
     }
 
@@ -213,8 +189,8 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @param code code码
      * @return HttpResponse
      */
-    protected HttpResponse doPostAuthorizationCode(String code) {
-        return HttpRequest.post(accessTokenUrl(code)).execute();
+    protected HttpResponse doPostAuthorizationCode(String code, Function<String, String> redirectUriProcess) {
+        return HttpRequest.post(accessTokenUrl(code, redirectUriProcess)).execute();
     }
 
     /**
@@ -223,8 +199,8 @@ public abstract class AuthDefaultRequest implements AuthRequest {
      * @param code code码
      * @return HttpResponse
      */
-    protected HttpResponse doGetAuthorizationCode(String code) {
-        return HttpRequest.get(accessTokenUrl(code)).execute();
+    protected HttpResponse doGetAuthorizationCode(String code, Function<String, String> redirectUriProcess) {
+        return HttpRequest.get(accessTokenUrl(code, redirectUriProcess)).execute();
     }
 
     /**

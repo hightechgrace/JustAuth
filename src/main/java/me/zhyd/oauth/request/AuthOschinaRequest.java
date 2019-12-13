@@ -12,6 +12,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * oschina登录
  *
@@ -29,8 +31,8 @@ public class AuthOschinaRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         this.checkResponse(accessTokenObject);
         return AuthToken.builder()
@@ -42,7 +44,7 @@ public class AuthOschinaRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject object = JSONObject.parseObject(response.body());
         this.checkResponse(object);
@@ -67,13 +69,13 @@ public class AuthOschinaRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("code", code)
             .queryParam("client_id", config.getClientId())
             .queryParam("client_secret", config.getClientSecret())
             .queryParam("grant_type", "authorization_code")
-            .queryParam("redirect_uri", config.getRedirectUri())
+            .queryParam("redirect_uri", redirectUriProcess.apply(config.getRedirectUri()))
             .queryParam("dataType", "json")
             .build();
     }

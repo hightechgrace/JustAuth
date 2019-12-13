@@ -39,12 +39,12 @@ public class AuthWeChatMpRequest extends AuthDefaultRequest {
      * @return 所有信息
      */
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        return this.getToken(accessTokenUrl(authCallback.getCode()));
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        return this.getToken(accessTokenUrl(authCallback.getCode(), redirectUriProcess));
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String openId = authToken.getOpenId();
 
         HttpResponse response = doGetUserInfo(authToken);
@@ -71,10 +71,10 @@ public class AuthWeChatMpRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         return AuthResponse.builder()
             .code(AuthResponseStatus.SUCCESS.getCode())
-            .data(this.getToken(refreshTokenUrl(oldToken.getRefreshToken())))
+            .data(this.getToken(refreshTokenUrl(oldToken.getRefreshToken(), redirectUriProcess)))
             .build();
     }
 
@@ -109,20 +109,10 @@ public class AuthWeChatMpRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
@@ -140,7 +130,7 @@ public class AuthWeChatMpRequest extends AuthDefaultRequest {
      * @return 返回获取accessToken的url
      */
     @Override
-    protected String accessTokenUrl(String code) {
+    protected String accessTokenUrl(String code, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.accessToken())
             .queryParam("code", code)
             .queryParam("appid", config.getClientId())
@@ -171,7 +161,7 @@ public class AuthWeChatMpRequest extends AuthDefaultRequest {
      * @return 返回获取userInfo的url
      */
     @Override
-    protected String refreshTokenUrl(String refreshToken) {
+    protected String refreshTokenUrl(String refreshToken, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.refresh())
             .queryParam("appid", config.getClientId())
             .queryParam("refresh_token", refreshToken)

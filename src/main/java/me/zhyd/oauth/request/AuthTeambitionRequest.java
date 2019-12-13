@@ -14,6 +14,8 @@ import me.zhyd.oauth.model.AuthResponse;
 import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 
+import java.util.function.Function;
+
 /**
  * Teambition授权登录
  *
@@ -35,7 +37,7 @@ public class AuthTeambitionRequest extends AuthDefaultRequest {
      * @return 所有信息
      */
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         HttpResponse response = HttpRequest.post(source.accessToken())
             .form("client_id", config.getClientId())
             .form("client_secret", config.getClientSecret())
@@ -53,7 +55,7 @@ public class AuthTeambitionRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String accessToken = authToken.getAccessToken();
 
         HttpResponse response = HttpRequest.get(source.userInfo())
@@ -80,7 +82,7 @@ public class AuthTeambitionRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         String uid = oldToken.getUid();
         String refreshToken = oldToken.getRefreshToken();
         HttpResponse response = HttpRequest.post(source.refresh())

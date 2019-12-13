@@ -35,13 +35,13 @@ public class AuthBaiduRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         return getAuthToken(response);
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         String userInfo = response.body();
         JSONObject object = JSONObject.parseObject(userInfo);
@@ -74,7 +74,7 @@ public class AuthBaiduRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String refreshUrl = UrlBuilder.fromBaseUrl(this.source.refresh())
             .queryParam("grant_type", "refresh_token")
             .queryParam("refresh_token", authToken.getRefreshToken())
@@ -88,20 +88,8 @@ public class AuthBaiduRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
-
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")
             .queryParam("client_id", config.getClientId())

@@ -33,18 +33,7 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
         super(config, AuthDefaultSource.KUJIALE, authStateCache);
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     * 默认只向用户请求用户信息授权
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.11.0
-     */
-    @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
     public String authorize(String state, Function<String, String> redirectUriProcess) {
@@ -73,8 +62,8 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    public AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         return getAuthToken(response);
     }
 
@@ -98,7 +87,7 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthUser getUserInfo(AuthToken authToken) {
+    public AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String openId = this.getOpenId(authToken);
         HttpResponse response = HttpRequest.get(UrlBuilder.fromBaseUrl(source.userInfo())
             .queryParam("access_token", authToken.getAccessToken())
@@ -123,7 +112,7 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
     /**
      * 获取酷家乐的openId，此id在当前client范围内可以唯一识别授权用户
      *
-     * @param authToken 通过{@link AuthKujialeRequest#getAccessToken(AuthCallback)}获取到的{@code authToken}
+     * @param authToken 通过{@link AuthKujialeRequest#getAccessToken(AuthCallback, Function<String, String>)}获取到的{@code authToken}
      * @return openId
      */
     private String getOpenId(AuthToken authToken) {
@@ -135,8 +124,8 @@ public class AuthKujialeRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
-        HttpResponse response = HttpRequest.post(refreshTokenUrl(authToken.getRefreshToken())).execute();
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
+        HttpResponse response = HttpRequest.post(refreshTokenUrl(authToken.getRefreshToken(), redirectUriProcess)).execute();
         return AuthResponse.builder().code(AuthResponseStatus.SUCCESS.getCode()).data(getAuthToken(response)).build();
     }
 }

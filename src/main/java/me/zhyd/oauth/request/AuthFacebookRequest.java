@@ -12,6 +12,8 @@ import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 /**
  * Facebook登录
  *
@@ -29,8 +31,8 @@ public class AuthFacebookRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         this.checkResponse(accessTokenObject);
         return AuthToken.builder()
@@ -41,7 +43,7 @@ public class AuthFacebookRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken,Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         String userInfo = response.body();
         JSONObject object = JSONObject.parseObject(userInfo);

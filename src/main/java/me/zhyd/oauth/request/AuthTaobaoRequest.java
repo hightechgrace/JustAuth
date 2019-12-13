@@ -32,13 +32,13 @@ public class AuthTaobaoRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         return AuthToken.builder().accessCode(authCallback.getCode()).build();
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
-        HttpResponse response = doPostAuthorizationCode(authToken.getAccessCode());
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authToken.getAccessCode(), redirectUriProcess);
         JSONObject accessTokenObject = JSONObject.parseObject(response.body());
         if (accessTokenObject.containsKey("error")) {
             throw new AuthException(accessTokenObject.getString("error_description"));
@@ -60,20 +60,10 @@ public class AuthTaobaoRequest extends AuthDefaultRequest {
             .build();
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     * @since 1.9.3
-     */
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
+
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")

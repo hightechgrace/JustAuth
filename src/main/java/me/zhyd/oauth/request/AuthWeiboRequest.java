@@ -15,6 +15,8 @@ import me.zhyd.oauth.utils.IpUtils;
 import me.zhyd.oauth.utils.StringUtils;
 import me.zhyd.oauth.utils.UrlBuilder;
 
+import java.util.function.Function;
+
 
 /**
  * 微博登录
@@ -33,8 +35,8 @@ public class AuthWeiboRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        HttpResponse response = doPostAuthorizationCode(authCallback.getCode());
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        HttpResponse response = doPostAuthorizationCode(authCallback.getCode(), redirectUriProcess);
         String accessTokenStr = response.body();
         JSONObject accessTokenObject = JSONObject.parseObject(accessTokenStr);
         if (accessTokenObject.containsKey("error")) {
@@ -49,7 +51,7 @@ public class AuthWeiboRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         String accessToken = authToken.getAccessToken();
         String uid = authToken.getUid();
         String oauthParam = String.format("uid=%s&access_token=%s", uid, accessToken);

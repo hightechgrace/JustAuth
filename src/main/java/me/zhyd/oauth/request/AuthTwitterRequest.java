@@ -14,6 +14,7 @@ import me.zhyd.oauth.utils.UrlBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static me.zhyd.oauth.config.AuthDefaultSource.TWITTER;
 import static me.zhyd.oauth.utils.GlobalAuthUtil.generateTwitterSignature;
@@ -69,7 +70,7 @@ public class AuthTwitterRequest extends AuthDefaultRequest {
      * @return access token
      */
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         Map<String, Object> oauthParams = buildOauthParams();
         oauthParams.put("oauth_token", authCallback.getOauthToken());
         oauthParams.put("oauth_verifier", authCallback.getOauthVerifier());
@@ -93,7 +94,7 @@ public class AuthTwitterRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken,Function<String, String> redirectUriProcess) {
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("user_id", authToken.getUserId());
         queryParams.put("screen_name", authToken.getScreenName());

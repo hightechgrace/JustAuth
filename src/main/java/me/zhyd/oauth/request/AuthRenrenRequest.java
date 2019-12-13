@@ -15,6 +15,7 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.utils.UrlBuilder;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import static me.zhyd.oauth.config.AuthDefaultSource.RENREN;
 import static me.zhyd.oauth.enums.AuthResponseStatus.SUCCESS;
@@ -36,12 +37,12 @@ public class AuthRenrenRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
-        return this.getToken(accessTokenUrl(authCallback.getCode()));
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
+        return this.getToken(accessTokenUrl(authCallback.getCode(), redirectUriProcess));
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = doGetUserInfo(authToken);
         JSONObject userObj = JSONObject.parseObject(response.body()).getJSONObject("response");
 
@@ -57,10 +58,10 @@ public class AuthRenrenRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken authToken) {
+    public AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         return AuthResponse.builder()
             .code(SUCCESS.getCode())
-            .data(getToken(this.refreshTokenUrl(authToken.getRefreshToken())))
+            .data(getToken(this.refreshTokenUrl(authToken.getRefreshToken(), redirectUriProcess)))
             .build();
     }
 

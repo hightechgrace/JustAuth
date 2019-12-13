@@ -34,7 +34,7 @@ public class AuthMeituanRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthToken getAccessToken(AuthCallback authCallback) {
+    protected AuthToken getAccessToken(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         HttpResponse response = HttpRequest.post(source.accessToken())
             .form("app_id", config.getClientId())
             .form("secret", config.getClientSecret())
@@ -53,7 +53,7 @@ public class AuthMeituanRequest extends AuthDefaultRequest {
     }
 
     @Override
-    protected AuthUser getUserInfo(AuthToken authToken) {
+    protected AuthUser getUserInfo(AuthToken authToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = HttpRequest.post(source.userInfo())
             .form("app_id", config.getClientId())
             .form("secret", config.getClientSecret())
@@ -75,7 +75,7 @@ public class AuthMeituanRequest extends AuthDefaultRequest {
     }
 
     @Override
-    public AuthResponse refresh(AuthToken oldToken) {
+    public AuthResponse refresh(AuthToken oldToken, Function<String, String> redirectUriProcess) {
         HttpResponse response = HttpRequest.post(source.refresh())
             .form("app_id", config.getClientId())
             .form("secret", config.getClientSecret())
@@ -102,13 +102,9 @@ public class AuthMeituanRequest extends AuthDefaultRequest {
         }
     }
 
-      @Override
-    public String authorize(String state) {
-        return authorize(state, Function.identity());
-    }
 
     @Override
-    public String authorize(String state, Function<String,String> redirectUriProcess) {
+    public String authorize(String state, Function<String, String> redirectUriProcess) {
 
         return UrlBuilder.fromBaseUrl(source.authorize())
             .queryParam("response_type", "code")

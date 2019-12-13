@@ -32,7 +32,7 @@ public interface AuthRequest {
      */
     @Deprecated
     default String authorize() {
-        throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
+        return this.authorize(null);
     }
 
     /**
@@ -42,12 +42,13 @@ public interface AuthRequest {
      * @return 返回授权地址
      */
     default String authorize(String state) {
+        return authorize(state, Function.identity());
+    }
+
+    default String authorize(String state, Function<String, String> redirectUriProcess) {
         throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
     }
 
-    default String authorize(String state, Function<String,String> redirectUriProcess){
-        throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
-    }
     /**
      * 第三方登录
      *
@@ -55,6 +56,10 @@ public interface AuthRequest {
      * @return 返回登录成功后的用户信息
      */
     default AuthResponse login(AuthCallback authCallback) {
+        return login(authCallback, Function.identity());
+    }
+
+    default AuthResponse login(AuthCallback authCallback, Function<String, String> redirectUriProcess) {
         throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
     }
 
@@ -75,6 +80,10 @@ public interface AuthRequest {
      * @return AuthResponse
      */
     default AuthResponse refresh(AuthToken authToken) {
+        return refresh(authToken, Function.identity());
+    }
+
+    default AuthResponse refresh(AuthToken authToken, Function<String, String> redirectUriProcess) {
         throw new AuthException(AuthResponseStatus.NOT_IMPLEMENTED);
     }
 }
